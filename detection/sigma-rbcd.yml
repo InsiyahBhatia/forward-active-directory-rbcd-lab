@@ -1,0 +1,37 @@
+title: Suspicious Machine Account Creation by Non-Admin User
+id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+status: experimental
+description: Detects creation of a new computer account by a standard domain user. This is a prerequisite for MachineAccountQuota-based RBCD abuse.
+references:
+  - https://attack.mitre.org/techniques/T1136/001/
+  - https://shenaniganslabs.io/2019/01/28/Wagging-the-Dog.html
+author: Insiyah
+date: 2024/01/01
+tags:
+  - attack.persistence
+  - attack.t1136.001
+  - attack.privilege_escalation
+  - attack.t1484
+logsource:
+  product: windows
+  service: security
+detection:
+  selection:
+    EventID: 4741
+  filter_admin:
+    SubjectUserName|endswith:
+      - '$'         # Exclude machine accounts creating computer objects
+  filter_dc:
+    SubjectUserName|contains:
+      - 'Administrator'
+      - 'SYSTEM'
+  condition: selection and not filter_admin and not filter_dc
+falsepositives:
+  - IT staff legitimately joining computers to the domain
+  - Automated provisioning systems
+level: medium
+fields:
+  - SubjectUserName
+  - NewAccountName
+  - ComputerName
+  - SubjectDomainName
